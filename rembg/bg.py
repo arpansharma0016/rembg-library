@@ -192,7 +192,7 @@ def blur_image_background(img: PILImage, cutout: PILImage) -> PILImage:
     Returns:
         PILImage: The modified image with the background blurred.
     """
-    blurred_image = img.filter(ImageFilter.BLUR)
+    blurred_image = img.filter(ImageFilter..GaussianBlur(5))
     blurred_image.paste(cutout, mask=cutout)
 
     return blurred_image
