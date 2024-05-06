@@ -12,7 +12,7 @@ from cv2 import (
     getStructuringElement,
     morphologyEx,
 )
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, ImageFilter
 from PIL.Image import Image as PILImage
 from pymatting.alpha.estimate_alpha_cf import estimate_alpha_cf
 from pymatting.foreground.estimate_foreground_ml import estimate_foreground_ml
@@ -181,6 +181,22 @@ def apply_background_color(img: PILImage, color: Tuple[int, int, int, int]) -> P
 
     return colored_image
 
+def blur_image_background(img: PILImage, cutout: PILImage) -> PILImage:
+    """
+    Blurs the image background of the image
+
+    Args:
+        img (PILImage): The image to be modified.
+        cutout (PILImage): The cutout image to be pasted above the image.
+
+    Returns:
+        PILImage: The modified image with the background blurred.
+    """
+    blurred_image = img.filter(ImageFilter.BLUR)
+    blurred_image.paste(cutout, mask=cutout)
+
+    return blurred_image
+
 
 def fix_image_orientation(img: PILImage) -> PILImage:
     """
@@ -213,6 +229,7 @@ def remove(
     only_mask: bool = False,
     post_process_mask: bool = False,
     bgcolor: Optional[Tuple[int, int, int, int]] = None,
+    blur_background: bool = False,
     *args: Optional[Any],
     **kwargs: Optional[Any]
 ) -> Union[bytes, PILImage, np.ndarray]:
@@ -231,6 +248,7 @@ def remove(
         only_mask (bool, optional): Flag indicating whether to return only the binary masks. Defaults to False.
         post_process_mask (bool, optional): Flag indicating whether to post-process the masks. Defaults to False.
         bgcolor (Optional[Tuple[int, int, int, int]], optional): Background color for the cutout image. Defaults to None.
+        blur_background (bool, optional): Flag indicating whether to blur the image background. Defaults to False.
         *args (Optional[Any]): Additional positional arguments.
         **kwargs (Optional[Any]): Additional keyword arguments.
 
@@ -295,6 +313,9 @@ def remove(
 
     if bgcolor is not None and not only_mask:
         cutout = apply_background_color(cutout, bgcolor)
+
+    if blur_background:
+        cutout = blur_image_background(img, cutout)
 
     if ReturnType.PILLOW == return_type:
         return cutout
