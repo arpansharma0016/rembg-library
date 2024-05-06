@@ -181,18 +181,19 @@ def apply_background_color(img: PILImage, color: Tuple[int, int, int, int]) -> P
 
     return colored_image
 
-def blur_image_background(img: PILImage, cutout: PILImage) -> PILImage:
+def blur_image_background(img: PILImage, cutout: PILImage, intensity: int) -> PILImage:
     """
     Blurs the image background of the image
 
     Args:
         img (PILImage): The image to be modified.
         cutout (PILImage): The cutout image to be pasted above the image.
+        intensity (int): Intensity of blurness of the background
 
     Returns:
         PILImage: The modified image with the background blurred.
     """
-    blurred_image = img.filter(ImageFilter..GaussianBlur(5))
+    blurred_image = img.filter(ImageFilter.GaussianBlur(intensity))
     blurred_image.paste(cutout, mask=cutout)
 
     return blurred_image
@@ -230,6 +231,7 @@ def remove(
     post_process_mask: bool = False,
     bgcolor: Optional[Tuple[int, int, int, int]] = None,
     blur_background: bool = False,
+    blur_intensity: int = 10,
     *args: Optional[Any],
     **kwargs: Optional[Any]
 ) -> Union[bytes, PILImage, np.ndarray]:
@@ -249,6 +251,7 @@ def remove(
         post_process_mask (bool, optional): Flag indicating whether to post-process the masks. Defaults to False.
         bgcolor (Optional[Tuple[int, int, int, int]], optional): Background color for the cutout image. Defaults to None.
         blur_background (bool, optional): Flag indicating whether to blur the image background. Defaults to False.
+        blur_intensity (int, optional): Number indicating intensity of blurness. Defaults to 10.
         *args (Optional[Any]): Additional positional arguments.
         **kwargs (Optional[Any]): Additional keyword arguments.
 
@@ -315,7 +318,7 @@ def remove(
         cutout = apply_background_color(cutout, bgcolor)
 
     if blur_background:
-        cutout = blur_image_background(img, cutout)
+        cutout = blur_image_background(img, cutout, blur_intensity)
 
     if ReturnType.PILLOW == return_type:
         return cutout
